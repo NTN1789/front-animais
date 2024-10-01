@@ -1,5 +1,4 @@
 
-import './App.css'
 import AnimalForm from './components/AnimalForm'
 
 function App() {
