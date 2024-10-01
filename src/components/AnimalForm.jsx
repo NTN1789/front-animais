@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 import "../styles/animal.css"
+
+import "../styles/button.css"
 import AnimalCard from "./animalCard/Card";
 
 const AnimalForm = () => {
@@ -16,7 +18,7 @@ const AnimalForm = () => {
   });
 
   const [animais, setAnimais] = useState([]);
-
+  const [editId, setEditId] = useState(null); 
 
   useEffect(() => {
     const fetchAnimais = async () => {
@@ -44,8 +46,14 @@ const AnimalForm = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:3000/animais', {
-        method: 'POST',
+      const url = editId 
+        ? `http://localhost:3000/animais/${editId}` 
+        : 'http://localhost:3000/animais';          
+      
+      const method = editId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -58,9 +66,17 @@ const AnimalForm = () => {
       }
 
       const data = await response.json();
-      setAnimais([...animais, data]);  
 
-      alert('Animal cadastrado com sucesso!');
+      if (editId) {
+    
+        setAnimais(animais.map(animal => (animal.id === editId ? data : animal)));
+        alert('Animal atualizado com sucesso!');
+      } else {
+       
+        setAnimais([...animais, data]);
+        alert('Animal cadastrado com sucesso!');
+      }
+
 
       setFormData({
         nome: '',
@@ -72,13 +88,27 @@ const AnimalForm = () => {
         dieta: '',
         observacao: ''
       });
+      setEditId(null); 
 
     } catch (error) {
-      console.error('Erro ao cadastrar animal:', error.message);
-      alert('Erro ao cadastrar animal: ' + error.message);
+      console.error('Erro ao cadastrar/atualizar animal:', error.message);
+      alert('Erro ao cadastrar/atualizar animal: ' + error.message);
     }
   };
 
+  const handleEdit = (animal) => {
+    setFormData({
+      nome: animal.nome,
+      idade: animal.idade,
+      peso: animal.peso,
+      status: animal.status,
+      habitat: animal.habitat,
+      comportamento: animal.comportamento,
+      dieta: animal.dieta,
+      observacao: animal.observacao
+    });
+    setEditId(animal.id); 
+  };
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm('Tens a certeza que deseja deletar este animal?');
@@ -105,51 +135,51 @@ const AnimalForm = () => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <h2>Cadastro de Animal</h2>
+        <h2>{editId ? 'Editar Animal' : 'Cadastro de Animal'}</h2>
       
-          <div>
-            <label>Nome:</label>
-            <input type="text" name="nome" value={formData.nome} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Idade:</label>
-            <input type="number" name="idade" value={formData.idade} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Peso:</label>
-            <input type="number" name="peso" value={formData.peso} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Status:</label>
-            <input type="text" name="status" value={formData.status} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Habitat:</label>
-            <input type="text" name="habitat" value={formData.habitat} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Comportamento:</label>
-            <input type="text" name="comportamento" value={formData.comportamento} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Dieta:</label>
-            <input type="text" name="dieta" value={formData.dieta} onChange={handleChange} required />
-          </div>
-          <div>
-            <label>Observação:</label>
-            <textarea name="observacao" value={formData.observacao} onChange={handleChange} required></textarea>
-          </div>
-        <button type="submit">Cadastrar Animal</button>
+        <div>
+          <label>Nome:</label>
+          <input type="text" name="nome" value={formData.nome} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Idade:</label>
+          <input type="number" name="idade" value={formData.idade} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Peso:</label>
+          <input type="number" name="peso" value={formData.peso} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Status:</label>
+          <input type="text" name="status" value={formData.status} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Habitat:</label>
+          <input type="text" name="habitat" value={formData.habitat} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Comportamento:</label>
+          <input type="text" name="comportamento" value={formData.comportamento} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Dieta:</label>
+          <input type="text" name="dieta" value={formData.dieta} onChange={handleChange} required />
+        </div>
+        <div>
+          <label>Observação:</label>
+          <textarea name="observacao" value={formData.observacao} onChange={handleChange} required></textarea>
+        </div>
+        <button type="submit">{editId ? 'Atualizar Animal' : 'Cadastrar Animal'}</button>
       </form>
 
       <h2>Animais Cadastrados</h2>
       <div className="animal-list">
         {animais.map((animal, index) => (
-          <div> 
-            <AnimalCard key={index} animal={animal} />
-            <button onClick={() => handleDelete(animal.id)}>Deletar</button> 
+          <div key={index}> 
+            <AnimalCard animal={animal} />
+            <button className="edit-btn" onClick={() => handleEdit(animal)}>Editar</button>
+      <button className="delete-btn" onClick={() => handleDelete(animal.id)}>Deletar</button>
           </div>
-          
         ))}
       </div>
     </div>
